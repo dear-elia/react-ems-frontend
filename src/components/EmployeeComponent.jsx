@@ -1,14 +1,35 @@
-import React, {useState} from 'react'
-import { createEmployee } from '../services/EmployeeService'
-import { useNavigate } from 'react-router-dom'
+import React, {useState, useEffect} from 'react'
+import { createEmployee, updateEmployee } from '../services/EmployeeService'
+import { getEmployee } from '../services/EmployeeService'
+import { useNavigate, useParams} from 'react-router-dom'
 
 export const EmployeeComponent = () => {
 
     const[firstName, setFirstName] = useState('')
     const[lastName, setLastName] = useState('')
     const[email, setEmail]  = useState('')
+    const {id} = useParams()
+
+    const [errors, setErrors] = useState({
+        firstName:'',
+        lastName: '',
+        email:''
+    })
 
     const navigator = useNavigate();
+
+    useEffect(() => {
+        if(id){
+            getEmployee(id).then((response) =>{
+                setFirstName(response.data.firstName);
+                setLastName(response.data.lastName);
+                setEmail(response.data.email);
+            }).catch(error => {
+                console.error(error);
+            })
+        }
+    }, [id])
+
 
     //Second Method
 
@@ -31,21 +52,77 @@ export const EmployeeComponent = () => {
     // }
 
     //function that handles the form submission
-    function saveEmployee(e){
+    function saveOrUpdateEmployee(e){
         //prevent the page to refresh
         e.preventDefault();
 
-        //creating a new object using values from useState
-        const employee = {firstName, lastName, email}
-        console.log(employee)
+        //validation check, only if true it executes
+        if(validationForm()){
 
-        //sending data to backend, calls the function createEmployee in EmployeeService.js
-        createEmployee(employee).then((response) => {
-            console.log(response.data); //using for debugging in console browser
-            navigator('/employees')
-        })
+            console.log("Current state before save:", { firstName, lastName, email });
+            //creating a new object using values from useState
+            const employee = {firstName, lastName, email}
+            console.log(employee)
+            console.log("Employee object to send:", employee);
+
+            //update logic and save logic
+            if(id){
+                console.log("Sending to backend the updated data...", employee);
+                updateEmployee(id, employee).then((response) => {
+                    console.log(response.data);
+                    navigator('/employees');
+                }).catch(error => {
+                    console.error(error);
+                })
+            } else {
+                createEmployee(employee).then((response) => {
+                    console.log(response.data); //using for debugging in console browser
+                    navigator('/employees')
+                }).catch(error=>{
+                    console.error(error);
+                })
+            }
+        }
     } 
 
+    //adding function that checks the form data
+    function validationForm(){
+        let valid = true;
+
+        const errorsCopy = {... errors}
+
+        if(firstName.trim()){
+            errorsCopy.firstName='';
+        } else{
+            errorsCopy.firstName = 'First name is required';
+            valid = false;
+        }
+
+        if(lastName.trim()){
+            errorsCopy.lastName='';
+        }else{
+            errorsCopy.lastName='Last name is required';
+            valid = false;
+        }
+        if(email.trim()){
+            errorsCopy.email='';
+        }else{
+            errorsCopy.email = 'Email is required'
+            valid = false;
+        }
+
+        setErrors(errorsCopy);
+        return valid;
+    }
+
+    function pageTitle(){
+        if(id){
+            return <h2 className='text-center'>Update Employee</h2>
+        }
+        else{
+            return <h2 className='text-center'>Add Employee</h2>
+        }
+    }
    return (
     <div className='container'>
         <br/><br/><br/>
@@ -56,7 +133,10 @@ export const EmployeeComponent = () => {
 
             <div className='card col-md-6 offset-md-3'>
                 <br/>
-                <h2 className='text-center'>Add Employee Form</h2>
+                {
+                    pageTitle()
+                }
+                {/* We can remove it as we added pageTitle functio: <h2 className='text-center'>Add Employee Form</h2> */}
                 <div className='card-body'>
                     <form>
                         <div className='form-group mb-2'>
@@ -66,9 +146,13 @@ export const EmployeeComponent = () => {
                                 placeholder='Enter First Name'
                                 name='firstName'
                                 value={firstName}
-                                className='form-control'
-                                onChange={(e) => setFirstName(e.target.value)}
+                                className={`form-control ${errors.firstName ? 'is-invalid': ''}`}
+                                onChange={(e) => {
+                                    console.log("Input changed:", e.target.value);
+                                    setFirstName(e.target.value);
+                                }}
                             />
+                            {errors.firstName && <div className='invalid-feedback'> {errors.firstName} </div>}
                         </div>
                         <div className='form-group mb-2'>
                             <label className='form-label'>Last Name:</label>
@@ -77,9 +161,10 @@ export const EmployeeComponent = () => {
                                 placeholder='Enter Last Name'
                                 name='lastName'
                                 value={lastName}
-                                className='form-control'
+                                className={`form-control ${errors.lastName ? 'is-invalid': ''}`}
                                 onChange={(e) => setLastName(e.target.value)}
                             />
+                            {errors.lastName && <div className='invalid-feedback'> {errors.lastName} </div>}
                         </div>
                         <div className='form-group mb-2'>
                             <label className='form-label'>Email:</label>
@@ -88,11 +173,12 @@ export const EmployeeComponent = () => {
                                 placeholder='Enter Email'
                                 name='email'
                                 value={email}
-                                className='form-control'
+                                className={`form-control ${errors.email ? 'is-invalid': ''}`}
                                 onChange={(e) => setEmail(e.target.value)}
                             />
+                            {errors.email && <div className='invalid-feedback'> {errors.email} </div>}
                         </div>
-                        <button className='btn btn-success' onClick={saveEmployee}>Submit</button>
+                        <button className='btn btn-success' onClick={saveOrUpdateEmployee}>Submit</button>
                     </form>
                 </div>
             </div>
