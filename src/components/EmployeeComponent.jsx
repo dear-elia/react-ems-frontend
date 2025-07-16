@@ -16,6 +16,7 @@ export const EmployeeComponent = () => {
         email:''
     })
 
+    //use for navigation between different pages
     const navigator = useNavigate();
 
     useEffect(() => {
@@ -115,6 +116,7 @@ export const EmployeeComponent = () => {
         return valid;
     }
 
+    //changing the title depending on the form type
     function pageTitle(){
         if(id){
             return <h2 className='text-center'>Update Employee</h2>
