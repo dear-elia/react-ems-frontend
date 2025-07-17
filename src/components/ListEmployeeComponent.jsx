@@ -21,27 +21,6 @@ const ListEmployeeComponent = () => {
         })
     }
 
-    /*const dataEmployee = [
-        {
-            "id":1,
-            "firstName" : "Elia",
-            "lastName" : "Safa",
-            "email" : "elia@gmail.com"
-        },
-        {
-            "id": 2,
-            "firstName" : "Mark",
-            "lastName" : "Im",
-            "email" : "mark@gmail.com"
-        },
-        {
-            "id": 3,
-            "firstName" : "Mari",
-            "lastName" : "Lee",
-            "email" : "leemaria@gmail.com"
-        },
-    ]
-    */
 
     function addNewEmployee(){
         navigator('/add-employee')
